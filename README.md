@@ -1,7 +1,7 @@
 # pi-memory-blocks
 
 Letta/MemGPT-style persistent memory blocks for
-[Pi](https://github.com/badlogic/pi-mono) coding agents. Gives the LLM
+[Pi](https://github.com/badlogic/pi-mono) coding agents. Gives the agent
 self-editable memory that survives across sessions.
 
 ## What it does
@@ -21,21 +21,21 @@ long-term recall.
 
 ## Installation
 
-Add this package to your project's Pi settings (`.pi/settings.json`):
+Install the package:
+
+```bash
+npm install @gordonb/pi-memory-blocks
+```
+
+Then add it to your project's Pi settings (`.pi/settings.json`):
 
 ```json
 {
-  "packages": ["../path/to/pi-memory-blocks"]
+  "packages": ["@gordonb/pi-memory-blocks"]
 }
 ```
 
 Or reference it from your global Pi settings (`~/.pi/agent/settings.json`).
-
-Then run `npm install` in this directory if you haven't already:
-
-```bash
-npm install
-```
 
 ## How it works
 
