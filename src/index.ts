@@ -28,18 +28,18 @@ const BlockFrontmatter = Type.Object({
 
 type BlockFrontmatter = Static<typeof BlockFrontmatter>;
 
-type Block = BlockFrontmatter & {
+export type Block = BlockFrontmatter & {
   content: string;
 };
 
-type BlockEntry = {
+export type BlockEntry = {
   key: string;
   block: Block;
 };
 
 // --- Block I/O ---
 
-const parseBlock = (raw: string): Block => {
+export const parseBlock = (raw: string): Block => {
   const { data, content } = matter(raw);
   const frontmatter = Value.Decode(
     BlockFrontmatter,
@@ -48,7 +48,7 @@ const parseBlock = (raw: string): Block => {
   return { ...frontmatter, content: content.trim() };
 };
 
-const serializeBlock = (block: Block): string => {
+export const serializeBlock = (block: Block): string => {
   const frontmatter = yaml
     .dump(
       { description: block.description, limit: block.limit },
@@ -58,10 +58,10 @@ const serializeBlock = (block: Block): string => {
   return `---\n${frontmatter}\n---\n${block.content}\n`;
 };
 
-const getMemoryDir = (cwd: string): string =>
+export const getMemoryDir = (cwd: string): string =>
   path.join(cwd, ".pi", "memory-blocks");
 
-const listBlockKeys = (memoryDir: string): string[] => {
+export const listBlockKeys = (memoryDir: string): string[] => {
   if (!fs.existsSync(memoryDir)) return [];
   return fs
     .readdirSync(memoryDir)
@@ -69,24 +69,28 @@ const listBlockKeys = (memoryDir: string): string[] => {
     .map((f) => f.replace(/\.md$/, ""));
 };
 
-const readBlock = (memoryDir: string, key: string): Block => {
+export const readBlock = (memoryDir: string, key: string): Block => {
   const filePath = path.join(memoryDir, `${key}.md`);
   const raw = fs.readFileSync(filePath, "utf-8");
   return parseBlock(raw);
 };
 
-const writeBlock = (memoryDir: string, key: string, block: Block): void => {
+export const writeBlock = (
+  memoryDir: string,
+  key: string,
+  block: Block,
+): void => {
   const filePath = path.join(memoryDir, `${key}.md`);
   fs.writeFileSync(filePath, serializeBlock(block), "utf-8");
 };
 
-const readAllBlocks = (memoryDir: string): BlockEntry[] =>
+export const readAllBlocks = (memoryDir: string): BlockEntry[] =>
   listBlockKeys(memoryDir).map((key) => ({
     key,
     block: readBlock(memoryDir, key),
   }));
 
-const DEFAULT_MEMORY_BLOCKS: Record<string, Block> = {
+export const DEFAULT_MEMORY_BLOCKS: Record<string, Block> = {
   user: {
     description: "Information about the user",
     limit: 2000,
@@ -99,7 +103,7 @@ const DEFAULT_MEMORY_BLOCKS: Record<string, Block> = {
   },
 };
 
-const ensureDefaults = (memoryDir: string): void => {
+export const ensureDefaults = (memoryDir: string): void => {
   if (!fs.existsSync(memoryDir)) {
     fs.mkdirSync(memoryDir, { recursive: true });
   }
@@ -114,7 +118,7 @@ const ensureDefaults = (memoryDir: string): void => {
 
 // --- Format helpers ---
 
-const renderMemoryBlock = ({ key, block }: BlockEntry): string => {
+export const renderMemoryBlock = ({ key, block }: BlockEntry): string => {
   return `<${key}>
   <description>${block.description}</description>
   <content char-limit=${block.limit} char-count=${block.content.length}>
@@ -123,7 +127,7 @@ const renderMemoryBlock = ({ key, block }: BlockEntry): string => {
 </${key}>`;
 };
 
-const renderMemorySystemPrompt = (blocks: BlockEntry[]): string => {
+export const renderMemorySystemPrompt = (blocks: BlockEntry[]): string => {
   const blockMarkup = blocks.map((b) => renderMemoryBlock(b)).join("\n");
   return `You have persistent memory blocks that survive across sessions. Use the updateMemory tool to store important information you learn. Review your memory blocks below and keep them up to date.
 
