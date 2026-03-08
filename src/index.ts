@@ -156,8 +156,6 @@ export default function memoryExtension(pi: ExtensionAPI) {
     const blocks = readAllBlocks(memoryDir);
     if (blocks.length === 0) return;
 
-    const blocksText = blocks.map(renderMemoryBlock).join("\n\n");
-
     return {
       systemPrompt: [event.systemPrompt, renderMemorySystemPrompt(blocks)].join(
         "\n\n",

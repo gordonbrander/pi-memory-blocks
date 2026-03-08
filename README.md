@@ -48,6 +48,7 @@ Each block is a `.md` file in `.pi/memory-blocks/` with YAML frontmatter:
 description: Information about the user
 limit: 2000
 ---
+
 Prefers functional programming style. Uses TypeScript and Deno.
 Name is Gordon.
 ```
