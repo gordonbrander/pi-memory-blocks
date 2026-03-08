@@ -1,12 +1,27 @@
 {
-  "name": "busytown-pi",
+  "name": "@gordonb/pi-memory-blocks",
   "version": "0.1.0",
-  "description": "Busytown event queue as a Pi extension",
+  "description": "Letta-style persistent memory blocks for Pi coding agents",
   "type": "module",
   "main": "src/index.ts",
-  "bin": {
-    "busytown": "src/cli.ts"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gordonbrander/pi-memory-blocks"
   },
+  "keywords": [
+    "pi",
+    "pi-extension",
+    "memory",
+    "letta",
+    "memgpt",
+    "coding-agent"
+  ],
+  "files": [
+    "src/index.ts",
+    "README.md",
+    "LICENSE-MIT"
+  ],
   "dependencies": {
     "@mariozechner/pi-coding-agent": "^0.56.1",
     "@sinclair/typebox": "^0.34.48",
@@ -17,7 +32,8 @@
     "test": "node --test 'src/**/*.test.ts'",
     "lint": "eslint 'src/**/*.ts'",
     "format:check": "prettier --check .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepublishOnly": "npm test && npm run lint"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
