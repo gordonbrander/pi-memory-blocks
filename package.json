@@ -10,6 +10,7 @@
     "url": "https://github.com/gordonbrander/pi-memory-blocks"
   },
   "keywords": [
+    "pi-package",
     "pi",
     "pi-extension",
     "memory",
@@ -17,6 +18,9 @@
     "memgpt",
     "coding-agent"
   ],
+  "pi": {
+    "extensions": ["src/index.ts"]
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -25,9 +29,11 @@
     "README.md",
     "LICENSE-MIT"
   ],
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "@sinclair/typebox": "*"
+  },
   "dependencies": {
-    "@mariozechner/pi-coding-agent": "^0.56.1",
-    "@sinclair/typebox": "^0.34.48",
     "gray-matter": "^4.0.3",
     "js-yaml": "^4.1.1"
   },
