@@ -17,6 +17,9 @@
     "memgpt",
     "coding-agent"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "src/index.ts",
     "README.md",
