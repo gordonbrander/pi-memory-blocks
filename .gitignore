@@ -1,0 +1,17 @@
+# Node
+node_modules/
+.npm
+npm-debug.log*
+
+# MacOS
+.DS_Store
+
+# Dev
+.env
+*.log
+
+# Claude
+.claude/settings.local.json
+
+# Busytown
+.busytown
