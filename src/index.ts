@@ -92,12 +92,14 @@ export const readAllBlocks = (memoryDir: string): BlockEntry[] =>
 
 export const DEFAULT_MEMORY_BLOCKS: Record<string, Block> = {
   user: {
-    description: "Information about the user, their preferences, facts about them, and relevant context",
+    description:
+      "Information about the user, their preferences, facts about them, and relevant context",
     limit: 2000,
     content: "",
   },
   agent: {
-    description: "Your role, own self-concept, personality traits, and behavioral guidelines",
+    description:
+      "Your role, own self-concept, personality traits, and behavioral guidelines",
     limit: 2000,
     content: "",
   },
