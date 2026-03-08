@@ -58,7 +58,8 @@ const serializeBlock = (block: Block): string => {
   return `---\n${frontmatter}\n---\n${block.content}\n`;
 };
 
-const getMemoryDir = (cwd: string): string => path.join(cwd, ".pi", "memory-blocks");
+const getMemoryDir = (cwd: string): string =>
+  path.join(cwd, ".pi", "memory-blocks");
 
 const listBlockKeys = (memoryDir: string): string[] => {
   if (!fs.existsSync(memoryDir)) return [];
