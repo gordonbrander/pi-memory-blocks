@@ -56,7 +56,7 @@ description: trimmed
 limit: 100
 ---
 
-  spaced out  
+  spaced out
 
 `;
     const block = parseBlock(raw);
@@ -135,6 +135,8 @@ describe("getMemoryDir", () => {
 
 // --- File system operations ---
 
+// --- listBlockKeys ---
+
 describe("listBlockKeys", () => {
   let tmpDir: string;
 
@@ -146,21 +148,66 @@ describe("listBlockKeys", () => {
     cleanUp(tmpDir);
   });
 
-  it("returns empty array for non-existent directory", () => {
-    const keys = listBlockKeys(path.join(tmpDir, "nope"));
-    assert.deepEqual(keys, []);
+  it("throws for non-existent directory", () => {
+    assert.throws(
+      () => Array.from(listBlockKeys(path.join(tmpDir, "nope"))),
+      (err: NodeJS.ErrnoException) => {
+        assert.equal(err.code, "ENOENT");
+        return true;
+      },
+    );
   });
 
-  it("returns keys for .md files", () => {
+  it("yields keys for .md files", () => {
     fs.writeFileSync(path.join(tmpDir, "user.md"), "---\n---\n");
     fs.writeFileSync(path.join(tmpDir, "agent.md"), "---\n---\n");
     fs.writeFileSync(path.join(tmpDir, "notes.txt"), "not a block");
 
-    const keys = listBlockKeys(tmpDir);
+    const keys = Array.from(listBlockKeys(tmpDir));
     assert.ok(keys.includes("user"));
     assert.ok(keys.includes("agent"));
     assert.ok(!keys.includes("notes"));
     assert.equal(keys.length, 2);
+  });
+
+  it("throws on invalid block filenames", () => {
+    fs.writeFileSync(path.join(tmpDir, "My Notes.md"), "---\n---\n");
+
+    assert.throws(
+      () => Array.from(listBlockKeys(tmpDir)),
+      (err: Error) => {
+        assert.ok(err instanceof TypeError);
+        assert.ok(err.message.includes("Invalid memory block filename"));
+        assert.ok(err.message.includes("My Notes.md"));
+        return true;
+      },
+    );
+  });
+
+  it("throws on filenames with special characters", () => {
+    fs.writeFileSync(path.join(tmpDir, "user@data.md"), "---\n---\n");
+
+    assert.throws(
+      () => Array.from(listBlockKeys(tmpDir)),
+      (err: Error) => {
+        assert.ok(err.message.includes("user@data.md"));
+        return true;
+      },
+    );
+  });
+
+  it("throws on first invalid filename encountered", () => {
+    fs.writeFileSync(path.join(tmpDir, "Bad One.md"), "---\n---\n");
+    fs.writeFileSync(path.join(tmpDir, "Bad Two.md"), "---\n---\n");
+    fs.writeFileSync(path.join(tmpDir, "valid.md"), "---\n---\n");
+
+    assert.throws(
+      () => Array.from(listBlockKeys(tmpDir)),
+      (err: Error) => {
+        assert.ok(err.message.includes("Invalid memory block filename"));
+        return true;
+      },
+    );
   });
 });
 
@@ -203,9 +250,14 @@ describe("readAllBlocks", () => {
     cleanUp(tmpDir);
   });
 
-  it("returns empty array for non-existent directory", () => {
-    const blocks = readAllBlocks(path.join(tmpDir, "nope"));
-    assert.deepEqual(blocks, []);
+  it("throws for non-existent directory", () => {
+    assert.throws(
+      () => readAllBlocks(path.join(tmpDir, "nope")),
+      (err: NodeJS.ErrnoException) => {
+        assert.equal(err.code, "ENOENT");
+        return true;
+      },
+    );
   });
 
   it("reads all blocks in the directory", () => {
@@ -243,7 +295,7 @@ describe("ensureDefaults", () => {
     ensureDefaults(memDir);
     assert.ok(fs.existsSync(memDir));
 
-    const keys = listBlockKeys(memDir).sort();
+    const keys = Array.from(listBlockKeys(memDir)).sort();
     assert.deepEqual(keys, ["agent", "user"]);
 
     const user = readBlock(memDir, "user");
@@ -284,8 +336,8 @@ describe("renderMemoryBlock", () => {
     assert.ok(result.includes("<user>"));
     assert.ok(result.includes("</user>"));
     assert.ok(result.includes("<description>Test block</description>"));
-    assert.ok(result.includes("char-limit=100"));
-    assert.ok(result.includes(`char-count=${sampleBlock.content.length}`));
+    assert.ok(result.includes("chars_limit: 100"));
+    assert.ok(result.includes(`chars_current: ${sampleBlock.content.length}`));
     assert.ok(result.includes("hello world"));
   });
 
@@ -295,7 +347,17 @@ describe("renderMemoryBlock", () => {
       block: { description: "empty", limit: 2000, content: "" },
     };
     const result = renderMemoryBlock(entry);
-    assert.ok(result.includes("char-count=0"));
+    assert.ok(result.includes("chars_current: 0"));
+  });
+
+  it("uses key directly as tag name (keys are validated upstream)", () => {
+    const entry: BlockEntry = {
+      key: "project-notes",
+      block: sampleBlock,
+    };
+    const result = renderMemoryBlock(entry);
+    assert.ok(result.includes("<project-notes>"));
+    assert.ok(result.includes("</project-notes>"));
   });
 });
 

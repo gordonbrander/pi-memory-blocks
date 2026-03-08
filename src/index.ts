@@ -18,6 +18,8 @@ import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { type Static, Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import { Text } from "@mariozechner/pi-tui";
+import { isSlug } from "./lib/slug.ts";
+import { stem } from "./lib/path.ts";
 
 // --- Types ---
 
@@ -61,13 +63,24 @@ export const serializeBlock = (block: Block): string => {
 export const getMemoryDir = (cwd: string): string =>
   path.join(cwd, ".pi", "memory-blocks");
 
-export const listBlockKeys = (memoryDir: string): string[] => {
-  if (!fs.existsSync(memoryDir)) return [];
-  return fs
-    .readdirSync(memoryDir)
-    .filter((f) => f.endsWith(".md"))
-    .map((f) => f.replace(/\.md$/, ""));
-};
+/**
+ * List block keys in a memory directory, validating each key.
+ * Throws if any .md file has an invalid key (not in slug form).
+ */
+export function* listBlockKeys(memoryDir: string): Generator<string> {
+  for (const path of fs.readdirSync(memoryDir)) {
+    if (!path.endsWith(".md")) {
+      continue;
+    }
+    const pathStem = stem(path);
+    if (!isSlug(pathStem)) {
+      throw new TypeError(
+        `Invalid memory block filename "${path}". Block filenames must be valid XML tag names (lowercase, hyphen, or underscore-separated slugs e.g. "user.md", "project-notes.md")`,
+      );
+    }
+    yield pathStem;
+  }
+}
 
 export const readBlock = (memoryDir: string, key: string): Block => {
   const filePath = path.join(memoryDir, `${key}.md`);
@@ -85,7 +98,7 @@ export const writeBlock = (
 };
 
 export const readAllBlocks = (memoryDir: string): BlockEntry[] =>
-  listBlockKeys(memoryDir).map((key) => ({
+  Array.from(listBlockKeys(memoryDir)).map((key) => ({
     key,
     block: readBlock(memoryDir, key),
   }));
@@ -123,9 +136,11 @@ export const ensureDefaults = (memoryDir: string): void => {
 export const renderMemoryBlock = ({ key, block }: BlockEntry): string => {
   return `<${key}>
   <description>${block.description}</description>
-  <content char-limit=${block.limit} char-count=${block.content.length}>
-    ${block.content}
-  </content>
+  <metadata>
+  - chars_current: ${block.content.length}
+  - chars_limit: ${block.limit}
+  </metadata>
+  <value>${block.content}</value>
 </${key}>`;
 };
 
@@ -149,10 +164,12 @@ export default function memoryExtension(pi: ExtensionAPI) {
     memoryDir = getMemoryDir(ctx.cwd);
     ensureDefaults(memoryDir);
 
-    const blocks = readAllBlocks(memoryDir);
-    const count = blocks.length;
-    const nonEmpty = blocks.filter((b) => b.block.content.length > 0).length;
-    ctx.ui.notify(`Memory: ${count} block(s), ${nonEmpty} non-empty`, "info");
+    const blockDesc = readAllBlocks(memoryDir)
+      .map(
+        ({ key, block }) => `${key} (${block.content.length}/${block.limit})`,
+      )
+      .join(", ");
+    ctx.ui.notify(`Memory blocks: ${blockDesc}`, "info");
   });
 
   // Inject memory blocks into system prompt every turn
@@ -185,7 +202,7 @@ export default function memoryExtension(pi: ExtensionAPI) {
     parameters: Type.Object({
       blockKey: Type.String({
         description:
-          "Block key (e.g. 'user', 'agent'). Must be an existing block.",
+          "Block to update (e.g. 'user', 'agent'). Must be an existing block.",
       }),
       oldText: Type.Optional(
         Type.String({
@@ -202,7 +219,7 @@ export default function memoryExtension(pi: ExtensionAPI) {
       const { blockKey, oldText, newText } = params;
 
       // Validate block exists
-      const keys = listBlockKeys(memoryDir);
+      const keys = Array.from(listBlockKeys(memoryDir));
       if (!keys.includes(blockKey)) {
         throw new Error(
           `Block "${blockKey}" does not exist. Available blocks: ${keys.join(", ")}`,
