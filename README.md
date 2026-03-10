@@ -21,21 +21,9 @@ long-term recall.
 
 ## Installation
 
-Install the package:
-
 ```bash
-npm install @gordonb/pi-memory-blocks
+pi install npm:@gordonb/pi-memory-blocks
 ```
-
-Then add it to your project's Pi settings (`.pi/settings.json`):
-
-```json
-{
-  "packages": ["@gordonb/pi-memory-blocks"]
-}
-```
-
-Or reference it from your global Pi settings (`~/.pi/agent/settings.json`).
 
 ## How it works
 
